@@ -14,12 +14,5 @@
 | v213     | p_preg          | Is currently pregnant                                |
 | v024     | f_region        | Region of residence for woman                        |
 | v190     | f_wealth        | Wealth index                                         |
-| s125a    | f_know_where    | How often do parents know where you are              |
-| s125b    | f_know_friend   | How often do parents know which friends you with     |
-| s125d    | f_know_school   | How often do parents know how school performance     |
-| s125c    | f_curfew        | How often do parents give curfew                     |
-| s126a    | f_friend_sex    | How many friends already started sexual relationship |
-| s126b    | f_friend_preg   | How many friends already 1 pregnancy                 |
-| s126c    | f_friend_condom | How many friends use condoms                         |
 | s109     | p_in_school     | Currently attending school?                          |
 | v025     | f_urban         | 1: urban, 2:rural                                    |
