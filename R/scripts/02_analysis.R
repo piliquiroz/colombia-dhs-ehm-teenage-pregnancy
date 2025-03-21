@@ -20,13 +20,6 @@ design <- svydesign(
 # Function to generate weighted tables
 weighted_table <- function(x) { svytable (x, design=design, round=FALSE)}
 
-weighted_table(~n_age+f_has_florp)
-weighted_table(~f_region+f_has_florp)
-weighted_table(~f_urban+f_has_florp)
-weighted_table(~f_ever_preg+f_has_florp)
-weighted_table(~f_wealth+f_has_florp)
-weighted_table(~f_secondary+f_has_florp)
-
 # Function to compute totals and percentages
 
 compute_percentages <- function(var) {
@@ -67,7 +60,7 @@ print(wealth_results)
 print(secondary_results)
 
 # Get the weighted frequency of f_has_florp
-florp_table <- foo(~f_has_florp)
+florp_table <- weighted_table(~f_has_florp)
 
 # Calculate total N
 total_n <- sum(florp_table)
@@ -90,7 +83,7 @@ cat("Number of teens:", total_teens, "\n")
 # Print the results
 total_teens
 
-# Verify the percentage of pregnant subjects
+# Verify the percentage of pregnant teens
 preg_teens <- svytable(~ f_ever_preg, design = design)
 percent_preg <- (preg_teens / total_teens) * 100
 
