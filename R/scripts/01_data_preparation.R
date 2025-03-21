@@ -1,5 +1,5 @@
 # Data Preparation Script for DHS Colombia Survey
-source("R/scripts/preamble.r")
+source("R/scripts/preamble.R")
 # Data Processing --------------------------------------------------------------
 
 # Load and filter datasets

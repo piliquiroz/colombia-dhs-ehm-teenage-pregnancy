@@ -4,6 +4,7 @@ library(haven)                            # Read .dta files
 library(here)                             # Consistent file paths across different computers
 library(tidyverse, warn.conflicts=FALSE)  # Comprehensive data science toolkit
 library(survey)                           # Specialized tools for complex survey analysis
+library(knitr)                            # To make md tables
 
 # Setup project paths
 pth.root       <- here()                                       # Project directory

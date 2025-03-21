@@ -3,35 +3,34 @@
 # Source the data preparation script
 source("R/scripts/preamble.R")
 
-# Load the sample with factor conversions
+# Load the sample
 dat <- load_sample()
 
+# Adding sampling weights---------------------------------
+
 # Create the survey design
-design <- svydesign(id = ~w_psu,
-                 strata = ~w_strat,
-                 weight = ~w_weight,
-                 data = dat,
-                 nest = TRUE)
+design <- svydesign(
+  id = ~w_psu,
+  strata = ~w_strat,
+  weight = ~w_weight,
+  data = dat,
+  nest = TRUE
+)
 
-# Order a table with the appropriate columns
-foo <- function(x) { svytable (x, design=design, round=FALSE)}
-foo(~n_age+f_has_florp)
-foo(~f_region+f_has_florp)
-foo(~f_urban+f_has_florp)
-foo(~f_ever_preg+f_has_florp)
-foo(~f_wealth+f_has_florp)
-foo(~f_secondary+f_has_florp)
+# Function to generate weighted tables
+weighted_table <- function(x) { svytable (x, design=design, round=FALSE)}
 
-# Hello Pili, so the above should print out all the basic data you need. To get 
-# totals just add the 2 numbers together, to get percentages divide the 'At 
-# least one' column by  the total you just calculated. To get the tables etc. 
-# working in R would require a bunch of learning R stuff that is hard, but this 
-# prints out everything you need to put the latex-table together manually.
-# Hello David, this is me trying
+weighted_table(~n_age+f_has_florp)
+weighted_table(~f_region+f_has_florp)
+weighted_table(~f_urban+f_has_florp)
+weighted_table(~f_ever_preg+f_has_florp)
+weighted_table(~f_wealth+f_has_florp)
+weighted_table(~f_secondary+f_has_florp)
+
 # Function to compute totals and percentages
 
 compute_percentages <- function(var) {
-  tab <- foo(var)  # Get weighted table
+  tab <- weighted_table(var)  # Get weighted table
   totals <- rowSums(tab)  # Compute totals per category
   has_florp <- tab[, "At least one"]  # Extract HAS FLORP column
   percentages <- (totals / total_sample) * 100  # Compute percentages
@@ -48,7 +47,7 @@ compute_percentages <- function(var) {
 }
 
 # Compute total sample size
-total_sample <- sum(foo(~n_age+f_has_florp)) 
+total_sample <- sum(weighted_table(~n_age+f_has_florp)) 
 
 # Compute percentages for all variables
 age_results <- compute_percentages(~n_age+f_has_florp)
@@ -98,6 +97,14 @@ percent_preg <- (preg_teens / total_teens) * 100
 preg_teens
 cat("Percentage of pregant teens:", percent_preg, "%\n")
 
+# Relationship between teen pregnancy and wealth and scholarity-----------------
+# Pregnancy across wealth
+preg_wealth<- svytable(~ f_wealth + f_ever_preg, 
+                       design = design) #create a cross table. Note: this is not a dataframe
+preg_wealth_df <- as.data.frame.matrix(preg_wealth) #create a data frame from the svytable object
+preg_wealth_df$Prevalence <- (preg_wealth_df$`At least once` / 
+                                rowSums(preg_wealth_df)) * 100 #create a new column for the pregnancy prevalence
+preg_wealth_df
 # CLEAN UP  --------------------------------------------------------------------
 # Clear environment
 rm(list = ls()) 
