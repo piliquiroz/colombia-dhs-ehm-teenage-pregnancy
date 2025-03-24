@@ -1,3 +1,11 @@
+---
+title: "Analysis Report"
+author: "The Pili"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r}
 # 02_analysis.R
 
 # Source the preamble script
@@ -317,17 +325,3 @@ ggplot(tcr, aes(x = "", y=richcount, fill=name)) +
        fill="Target Country", x = NULL, y = NULL) +   # remove axis labels
   scale_fill_discrete(labels = c(n_latam = "Latin America", n_northamerica = "North America", n_europe = "Europe", n_australia_other = "Australia and Other")) +
   theme_minimal()
-
-# # CLEAN UP  --------------------------------------------------------------------
-# # Clear environment
-# rm(list = ls())
-# 
-# # Clear packages
-# detach("package:datasets", unload = TRUE)  # For base
-# 
-# # Clear plots
-# graphics.off()  # Clears plots, closes all graphics devices
-# 
-# # Clear console
-# cat("\014")  # ctrl+L
-
