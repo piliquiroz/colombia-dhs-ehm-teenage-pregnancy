@@ -90,7 +90,27 @@ percent_preg <- (preg_teens / total_teens) * 100
 preg_teens
 cat("Percentage of pregant teens:", percent_preg, "%\n")
 
-# Relationship between teen pregnancy and wealth and scholarity-----------------
+# Relationship between teen pregnancy and having an EHM wealth and schooling-------
+
+# percentage of housholds that have at least one EHM
+house_has_florp <- svytotal(~ f_has_florp, design, na.rm = TRUE)
+percent_has_florp <- (house_has_florp / total_teens) * 100
+
+# Print the results
+cat("Percentage of teens with at least one EHM:", percent_has_florp, "%\n")
+
+# frequencies for teens that have an EHM
+svytable(~f_has_florp, design = design)
+
+# Print the results
+cat("Percentage of teens with at least one EHM:", percent_has_florp, "%\n")
+
+# Pregnancy acrooss having an EHM
+preg_ehm<- svytable(~  f_has_florp+ f_ever_preg, design= design) #cross table
+preg_ehm_df <- as.data.frame.matrix(preg_ehm) #make dataframe
+preg_ehm_df$Prevalence <- (preg_ehm_df$`At least once` / rowSums(preg_ehm_df)) * 100 #prevalence
+preg_ehm_df
+
 # Pregnancy across wealth
 preg_wealth<- svytable(~ f_wealth + f_ever_preg, 
                        design = design) #create a cross table. Note: this is not a dataframe
@@ -98,16 +118,215 @@ preg_wealth_df <- as.data.frame.matrix(preg_wealth) #create a data frame from th
 preg_wealth_df$Prevalence <- (preg_wealth_df$`At least once` / 
                                 rowSums(preg_wealth_df)) * 100 #create a new column for the pregnancy prevalence
 preg_wealth_df
-# CLEAN UP  --------------------------------------------------------------------
-# Clear environment
-rm(list = ls()) 
 
-# Clear packages
-detach("package:datasets", unload = TRUE)  # For base
+# Pregnancy across schooling
+preg_school_prog <- svytable(~ f_secondary + f_ever_preg, 
+                             design = design)#create a cross table
+preg_school_prog_df <- as.data.frame.matrix(preg_school_prog) #create a data frame from the svytable object
+preg_school_prog_df$Prevalence <- (preg_school_prog_df$`At least once` / 
+                                     rowSums(preg_school_prog_df)) * 100 #create a new column for the pregnancy prevalence
+preg_school_prog_df
 
-# Clear plots
-graphics.off()  # Clears plots, closes all graphics devices
+# Chi sq tests
 
-# Clear console
-cat("\014")  # ctrl+L
+# Pregnancy and having an EHM
+svychisq(~f_ever_preg + f_has_florp, design, statistic="Chisq") # Chi² test  
 
+# Pregnancy and Wealth
+svychisq(~f_ever_preg + f_wealth, design, statistic="Chisq") # Chi² test
+
+# Pregnancy and Schooling
+svychisq(~f_ever_preg + f_secondary, design, statistic="Chisq") # Chi² test
+
+# Characteristics of the emigrants----------------------------------------------
+
+# Distrubution of emigrants by gender-------------------------------------------
+# First, gather data to long format, but multiply the values by weights
+gen_dat <- dat %>%
+  gather(key = "gender", value = "people", 
+         n_florp_man, n_florp_wom, n_florp_trans) %>%
+  mutate(weighted_people = people * w_weight)
+
+# Then, summarize by gender
+gender_counts <- gen_dat %>%
+  group_by(gender) %>%
+  summarise(w_count = sum(weighted_people))
+gender_counts
+
+total_gender <- sum(gender_counts$w_count)
+
+# Print the total count of people
+print(total_gender)
+
+# Calculate percentages
+gender_counts$percentage <- gender_counts$w_count / sum(gender_counts$w_count) * 100
+colnames(gender_counts) <- c("Characteristic", "Count", "Percentage")
+gender_counts
+# Replace the gender labels
+gender_counts <- gender_counts %>%
+  mutate(Characteristic = recode(Characteristic,
+                                 "n_florp_man" = "Man",
+                                 "n_florp_trans" = "Transgender",
+                                 "n_florp_wom" = "Woman"))
+gender_counts
+# Destination country of the migrants
+# First, gather data to long format, but multiply the values by weights
+long_dat <- dat %>%
+  gather(key = "country", value = "people", 
+         n_venezuela, n_us, n_spain, n_ecuador, n_panama, n_canada,
+         n_chile, n_mexico, n_brazil, n_argentina, n_france, n_italy,
+         n_uk, n_australia, n_peru, n_germany, n_other_country) %>%
+  mutate(weighted_people = people * w_weight)
+
+# Then, summarize by country
+country_counts <- long_dat %>%
+  group_by(country) %>%
+  summarise(weighted_count = sum(weighted_people))
+country_counts
+
+# Sort country_counts in descending order
+country_counts <- country_counts %>%
+  arrange(desc(weighted_count))
+
+# Calculate percentages
+country_counts$percentage <- country_counts$weighted_count / 
+                             sum(country_counts$weighted_count) * 100
+country_counts
+
+total_migrants <- sum(country_counts$weighted_count)
+
+# Print Results
+print(total_migrants)
+
+# Bar chart of destination countries.
+
+country_counts$country_label <- recode(country_counts$country,
+                                       "n_venezuela" = "Venezuela",
+                                       "n_us" = "US",
+                                       "n_spain" = "Spain",
+                                       "n_ecuador" = "Ecuador",
+                                       "n_panama" = "Panama",
+                                       "n_canada" = "Canada",
+                                       "n_chile" = "Chile",
+                                       "n_mexico" = "Mexico",
+                                       "n_brazil" = "Brazil",
+                                       "n_argentina" = "Argentina",
+                                       "n_france" = "France",
+                                       "n_italy" = "Italy",
+                                       "n_uk" = "UK",
+                                       "n_australia" = "Australia",
+                                       "n_peru" = "Peru",
+                                       "n_germany" = "Germany",
+                                       "n_other_country" = "Other"
+)
+ggplot(country_counts, aes(x = reorder(country_label, -weighted_count), y = weighted_count)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  theme_minimal() +
+  labs(x = "Country", y = "Weighted Count") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), aspect.ratio=.5) +
+  scale_y_continuous(labels = scales::comma)
+
+# Destination Regions
+
+# Define country and super-region columns
+srl <- c("n_latam", "n_northamerica", "n_europe", "n_australia_other")
+ecl <- c("n_venezuela", "n_us", "n_spain", "n_ecuador", "n_panama", "n_canada",
+         "n_chile", "n_mexico", "n_brazil", "n_argentina", "n_france", "n_italy",
+         "n_uk", "n_australia", "n_peru", "n_germany", "n_other_country")
+
+# Function to apply weighting
+reweight <- function(x) { x * dat$w_weight }
+
+# Compute weighted counts
+tc <- dat %>%
+  reframe(across(srl, reweight)) %>%  # Apply weights
+  summarise(across(everything(), sum)) %>%  # Get totals
+  pivot_longer(cols = everything(), names_to = "Characteristic", values_to = "Count")
+
+# Compute total count for percentage calculation
+total_count <- sum(tc$Count)
+
+# Add percentage column
+tc <- tc %>%
+  mutate(Percentage = (Count / total_count) * 100)
+
+# Rename columns
+colnames(tc) <- c("Characteristic", "Count", "Percentage (%)")
+
+# Print count and percentage destination region of EHM
+print(tc)
+
+# Destination of the migrants by wealth-----------------------------------------
+
+is_poor = dat$f_wealth == "Poorer" | dat$f_wealth == "Poorest"
+dat$p_is_poor <- is_poor
+#tc-poor
+tcp <- dat[is_poor,] %>%
+  # Reweight all the columns
+  summarise(across(srl, function(d) {d * dat[is_poor, "w_weight"]})) %>%
+  # Sum them into a 1-row table of totals
+  summarise(across(everything(), sum)) %>%
+  # Transpose table from 1 row into 1 column
+  tibble::rownames_to_column() %>%  
+  pivot_longer(-rowname) %>% 
+  pivot_wider(names_from=rowname, values_from=value)
+names(tcp)[2] <- "poorcount"
+
+sum(tcp[,"poorcount"])
+
+#tc-rich
+tcr <- dat[!is_poor,] %>%
+  # Reweight all the columns
+  summarise(across(srl, function(d) {d * dat[!is_poor, "w_weight"]})) %>%
+  # Sum them into a 1-row table of totals
+  summarise(across(everything(), sum)) %>%
+  # Transpose table from 1 row into 1 column
+  tibble::rownames_to_column() %>%  
+  pivot_longer(-rowname) %>% 
+  pivot_wider(names_from=rowname, values_from=value)
+names(tcr)[2] <- "richcount"
+
+sum(tcr[,"richcount"])
+
+# Add a percentage column to tcp
+tcp <- tcp %>%
+  mutate(percentage = poorcount / sum(poorcount) * 100)
+
+# Add a percentage column to tcr
+tcr <- tcr %>%
+  mutate(percentage = richcount / sum(richcount) * 100)
+
+tcr
+tcp
+
+#plots
+
+ggplot(tcp, aes(x = "", y=poorcount, fill=name)) +
+  geom_bar(stat="identity", width = 1) +
+  coord_polar("y", start = 0) +
+  labs(title="Destination Countries for Lower-Income Households",
+       fill="Target Country", x = NULL, y = NULL) +   # remove axis labels
+  scale_fill_discrete(labels = c(n_latam = "Latin America", n_northamerica = "North America", n_europe = "Europe", n_australia_other = "Australia and Other")) +
+  theme_minimal()
+
+ggplot(tcr, aes(x = "", y=richcount, fill=name)) +
+  geom_bar(stat="identity", width = 1) +
+  coord_polar("y", start = 0) +
+  labs(title="Destination Countries for Middle and High-Income Households",
+       fill="Target Country", x = NULL, y = NULL) +   # remove axis labels
+  scale_fill_discrete(labels = c(n_latam = "Latin America", n_northamerica = "North America", n_europe = "Europe", n_australia_other = "Australia and Other")) +
+  theme_minimal()
+
+# # CLEAN UP  --------------------------------------------------------------------
+# # Clear environment
+# rm(list = ls())
+# 
+# # Clear packages
+# detach("package:datasets", unload = TRUE)  # For base
+# 
+# # Clear plots
+# graphics.off()  # Clears plots, closes all graphics devices
+# 
+# # Clear console
+# cat("\014")  # ctrl+L
+# 
