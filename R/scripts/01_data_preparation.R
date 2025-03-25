@@ -1,5 +1,21 @@
 # Data Preparation Script for DHS Colombia Survey
+# 
+# Purpose: Preprocess demographic survey data to analyze teenage pregnancy 
+#          in the context of household migration
+# 
+# Data Sources: 
+#   - IR (Individual Responses): Women's survey responses
+#   - PR (Household Roster): Person-level household data
+#   - HR (Household Data): Household-level information
+# 
+# Key Preprocessing Steps:
+#   1. Load raw survey datasets
+#   2. Filter for teenage girls (ages 13-19)
+#   3. Identify households with emigrants
+
+# Source project-wide configurations and utility functions
 source("R/scripts/preamble.R")
+
 # Data Processing --------------------------------------------------------------
 
 # Load and filter datasets
@@ -11,7 +27,7 @@ pr <- load_cols(pth.pr_dat, pth.pr_col)
 hr <- load_cols(pth.hr_dat, pth.hr_col) %>% 
   filter(p_has_ehm == 1)
 
-# Household Recode (HR) Data Processing ---------------------------------------
+# Household Recode (HR) Data Processing ----------------------------------------
 
 # Look through the rows of the HR and create the following columns:
 #   - n_ehm: total number of emigrants in this household
@@ -28,9 +44,12 @@ countries <- tibble(
           "germany", "other_country"),
   num = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 96)
 )
+
 # Helper function to check if a value is non-NA and matches a specific number
 f <- function(c, n) !is.na(c) & (c == n)
+
 # Function to count emigrants by country
+# Systematically checks multiple columns for emigrant destination
 count_country <- function(tag) {
   num <- countries$num[countries$tag == tag]
   x <- rep(0, nrow(hr))
@@ -86,9 +105,9 @@ test_n <- function(n) {
   
   # Get the column for the n'th ehm
   v1 <- nr[, as.vector(sprintf("f_floc_%02d", n))]
-  # Get the column for the (n+1)'th ehm
+ 
+   # Get the column for the (n+1)'th ehm
   v2 <- nr[, as.vector(sprintf("f_floc_%02d", n + 1))]
-  
   all(!is.na(v1)) &&  # None of the n'th ehms are missing
     all(is.na(v2))    # All of the (n+1)th ehms are missing
 }
@@ -118,8 +137,6 @@ hr$n_ehm_trans  <- count_sex("trans")
 b <- (hr$n_ehm_man + hr$n_ehm_wom + hr$n_ehm_trans) == hr$n_ehm
 all(b)
 
-# NOTE: there is 1 household with a trans ehm, but that hh has no tirls
-
 # Person Recode (PR) Data Processing ------------------------------------------
 
 # Create derived columns in the PR dataset:
@@ -131,25 +148,45 @@ all(b)
 #       - Previous residence was abroad (f_res_prev == 3)
 #       - OR residence 5 years ago was abroad (f_res_5yago == 3)
 
+# Identify Teenage Girls in Survey --------------------------------------------
+
 # Identify teenage girls who completed the Individual Recode (IR) survey
+# Uses is_member to match across cluster, household, and line indices
 pr$p_tirl <- is_member(pr, ir, ir_idx)
 
+# Validate teenage girl identification
+tirl_count <- sum(pr$p_tirl)
+message(sprintf("Teenage girls identified: %d", tirl_count))
+
+# International Migration History --------------------------------------------
+
 # Identify individuals with previous international residence
+# Checks both previous residence and residence 5 years ago
 pr$p_exehm <- is_really(pr$f_res_prev, 3) | is_really(pr$f_res_5yago, 3)
 
-# Helper Frames for Further Analysis -------------------------------------------
+# Validate migration history
+exehm_count <- sum(pr$p_exehm)
+message(sprintf("Individuals with international residence history: %d", exehm_count))
+
+# Helper Frames for Further Analysis ------------------------------------------
 
 # Identify households currently with emigrants
-# Selects unique households where at least one member is a current emigrant
+# Unique households with at least one current emigrant
 hh_hf <- pr %>% 
   filter(p_has_ehm == 1) %>% 
   distinct(x_cluster, x_hh)
 
+# Validate current emigrant households
+message(sprintf("Households with current emigrants: %d", nrow(hh_hf)))
+
 # Identify households with past emigrants (excluding teenage girls)
-# Selects unique households with past emigrants who are not teenage girls
+# Unique households with past emigrants, excluding teenage girls
 hh_xf <- pr %>% 
   filter(p_exehm & !p_tirl) %>% 
   distinct(x_cluster, x_hh)
+
+# Validate past emigrant households
+message(sprintf("Households with past emigrants (excluding teenage girls): %d", nrow(hh_xf)))
 
 # Identify teenage girls who were also past emigrants
 # Selects identifying information for teenage girls with past emigrant status
@@ -157,34 +194,44 @@ xf_tirls <- pr %>%
   filter(p_exehm & p_tirl) %>%
   select(all_of(ir_idx))
 
+# Validate teenage girls with migration history
+message(sprintf("Teenage girls with international residence history: %d", nrow(xf_tirls)))
+
 # Educational Status Processing ----------------------------------------------
 
-# NOTE: ir$p_in_school has *no* missing values, they are all either 0 (not attending) or 1 (attending)
-sum(ir$p_in_school == 0 | ir$p_in_school == 1) == nrow(ir)
+# Validate school attendance data
+# Ensure p_in_school contains only 0 or 1
+stopifnot(all(ir$p_in_school %in% c(0, 1)))
 
-# NOTE: levels of f_edu
-# 0         no education
-# 1   incomplete primary
-# 2     complete primary
-# 3 incomplete secondary
-# 4   complete secondary
-# 5               higher
-#
-# <4: not finished with secondary yet
+# Educational Level Coding Scheme:
+# 0: No education
+# 1: Incomplete primary
+# 2: Complete primary
+# 3: Incomplete secondary
+# 4: Complete secondary
+# 5: Higher education
 
-# f_secondary
-# 1: !in-school && schooling <4   # No
-# 2: in-school && schooling <4    # Attending
-# 3: schooling >= 4               # Complete
+# Secondary Education Status Classification:
+# 1: Not in school, incomplete secondary
+# 2: In school, incomplete secondary
+# 3: Complete secondary or higher
 
+# Initialize secondary education status
 ir$f_secondary <- 1
-# Set anyone in school to 2
-ir$f_secondary[ir$p_in_school == 1] = 2
-# Set anyone who has finished secondary or higher to 3
-ir$f_secondary[ir$f_edu == 4 | ir$f_edu == 5] = 3 # complete
 
-ir$f_dropout <- 0
-ir$f_dropout[ir$f_secondary == 1] = 1
+# Update status for students
+ir$f_secondary[ir$p_in_school == 1] <- 2
+
+# Update status for completed secondary education
+ir$f_secondary[ir$f_edu %in% c(4, 5)] <- 3
+
+# Identify potential dropouts
+ir$f_dropout <- as.numeric(ir$f_secondary == 1)
+
+# Validation of educational status
+edu_summary <- table(ir$f_secondary)
+message("Educational Status Distribution:")
+print(edu_summary)
 
 
 # Individual Recode (IR) Data Processing --------------------------------------
@@ -200,15 +247,37 @@ ir$f_dropout[ir$f_secondary == 1] = 1
 #   - p_has_exehm: Identifies if in a household with past emigrants
 #   - p_was_ehm: Identifies if the individual was a past emigrant
 
-# Pregnancy Status
-# TRUE if: currently pregnant, has given birth, or has had terminations
+# Pregnancy Status Identification
+# Defines pregnancy based on multiple indicators:
+#   - Current pregnancy
+#   - Previous births
+#   - Pregnancy terminations
 ir$p_ever_preg <- (ir$p_preg == 1) | (ir$n_birth > 0) | (ir$n_term > 0)
 
+# Validate pregnancy status
+preg_count <- sum(ir$p_ever_preg)
+message(sprintf("Teenage girls with pregnancy history: %d (%.2f%%)", 
+                preg_count, 
+                (preg_count / nrow(ir)) * 100))
+
 # Household Emigrant Status
-# Identifies household and individual emigration status using helper frames
+# Uses helper frames created in previous processing steps
+# Identifies:
+#   - Households with current emigrants
+#   - Households with past emigrants
+#   - Individual migration history
 ir$p_has_ehm <- is_member(ir, hh_hf, hh_idx)
 ir$p_has_exehm <- is_member(ir, hh_xf, hh_idx)
 ir$p_was_ehm <- is_member(ir, xf_tirls, ir_idx)
+
+# Validate emigrant household and migration status
+message(sprintf(
+  "Emigrant Household Status:\n  Current Emigrants: %d (%.2f%%)\n  
+  Past Emigrants: %d (%.2f%%)\n  Individual Migration History: %d (%.2f%%)",
+  sum(ir$p_has_ehm), (sum(ir$p_has_ehm) / nrow(ir)) * 100,
+  sum(ir$p_has_exehm), (sum(ir$p_has_exehm) / nrow(ir)) * 100,
+  sum(ir$p_was_ehm), (sum(ir$p_was_ehm) / nrow(ir)) * 100
+))
 
 # Join Datasets ----------------------------------------------------------------
 
