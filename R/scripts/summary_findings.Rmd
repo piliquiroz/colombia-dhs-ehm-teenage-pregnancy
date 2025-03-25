@@ -35,30 +35,30 @@ weighted_table <- function(x) {
 compute_percentages <- function(var) {
      tab <- weighted_table(var)  # Get weighted table
      totals <- rowSums(tab)  # Compute totals per category
-     has_florp <- tab[, "At least one"]  # Extract HAS FLORP column
+     has_ehm <- tab[, "At least one"]  # Extract HAS ehm column
      percentages <- (totals / total_sample) * 100  # Compute percentages
-     has_florp_percentage <- (has_florp / totals) * 100  # Compute % (HAS FLORP)
+     has_ehm_percentage <- (has_ehm / totals) * 100  # Compute % (HAS ehm)
   
 # Convert to data frame for display
 results <- data.frame(
       Category = rownames(tab), 
       Total = round(totals), # Round total counts
-      Has_Florp = round(has_florp), # Round HAS FLORP counts
+      Has_ehm = round(has_ehm), # Round HAS ehm counts
       Percentage = percentages,
-      Has_Florp_Percentage = has_florp_percentage)
+      Has_ehm_Percentage = has_ehm_percentage)
       return(results)
 }
 
 # Compute total sample size
-total_sample <- sum(weighted_table(~n_age+f_has_florp)) 
+total_sample <- sum(weighted_table(~n_age+f_has_ehm)) 
 
 # Compute percentages for all variables
-age_results <- compute_percentages(~n_age+f_has_florp)
-region_results <- compute_percentages(~f_region+f_has_florp)
-urban_results <- compute_percentages(~f_urban+f_has_florp)
-ever_preg_results <- compute_percentages(~f_ever_preg+f_has_florp)
-wealth_results <- compute_percentages(~f_wealth+f_has_florp)
-secondary_results <- compute_percentages(~f_secondary+f_has_florp)
+age_results <- compute_percentages(~n_age+f_has_ehm)
+region_results <- compute_percentages(~f_region+f_has_ehm)
+urban_results <- compute_percentages(~f_urban+f_has_ehm)
+ever_preg_results <- compute_percentages(~f_ever_preg+f_has_ehm)
+wealth_results <- compute_percentages(~f_wealth+f_has_ehm)
+secondary_results <- compute_percentages(~f_secondary+f_has_ehm)
 
 
 # Print results
@@ -69,22 +69,22 @@ print(ever_preg_results)
 print(wealth_results)
 print(secondary_results)
 
-# Get the weighted frequency of f_has_florp
-florp_table <- weighted_table(~f_has_florp)
+# Get the weighted frequency of f_has_ehm
+ehm_table <- weighted_table(~f_has_ehm)
 
 # Calculate total N
-total_n <- sum(florp_table)
+total_n <- sum(ehm_table)
 
-# Extract N that have florp
-n_with_florp <- florp_table["At least one"]
+# Extract N that have ehm
+n_with_ehm <- ehm_table["At least one"]
 
 # Compute the percentage
-pct_with_florp <- (n_with_florp / total_n) * 100
+pct_with_ehm <- (n_with_ehm / total_n) * 100
 
 # Display
 cat("Total N:", total_n, "\n")
-cat("N with florp:", n_with_florp, "\n")
-cat("Percent with florp:", pct_with_florp, "\n")
+cat("N with ehm:", n_with_ehm, "\n")
+cat("Percent with ehm:", pct_with_ehm, "\n")
 
 # Verify the sample size
 total_teens <- sum(weights(design, na.rm = TRUE))
@@ -100,20 +100,20 @@ cat("Percentage of pregant teens:", percent_preg, "%\n")
 # Relationship between teen pregnancy and having an EHM wealth and schooling----
 
 # percentage of households that have at least one EHM
-house_has_florp <- svytotal(~ f_has_florp, design, na.rm = TRUE)
-percent_has_florp <- (house_has_florp / total_teens) * 100
+house_has_ehm <- svytotal(~ f_has_ehm, design, na.rm = TRUE)
+percent_has_ehm <- (house_has_ehm / total_teens) * 100
 
 # Print the results
-cat("Percentage of teens with at least one EHM:", percent_has_florp, "%\n")
+cat("Percentage of teens with at least one EHM:", percent_has_ehm, "%\n")
 
 # frequencies for teens that have an EHM
-svytable(~f_has_florp, design = design)
+svytable(~f_has_ehm, design = design)
 
 # Print the results
-cat("Percentage of teens with at least one EHM:", percent_has_florp, "%\n")
+cat("Percentage of teens with at least one EHM:", percent_has_ehm, "%\n")
 
 # Pregnancy across having an EHM
-preg_ehm<- svytable(~  f_has_florp+ f_ever_preg, design= design) #cross table
+preg_ehm<- svytable(~  f_has_ehm+ f_ever_preg, design= design) #cross table
 preg_ehm_df <- as.data.frame.matrix(preg_ehm) #make dataframe
 preg_ehm_df$Prevalence <- (preg_ehm_df$`At least once` / 
                              rowSums(preg_ehm_df)) * 100 #prevalence
@@ -138,7 +138,7 @@ preg_school_prog_df
 # Chi sq tests
 
 # Pregnancy and having an EHM
-svychisq(~f_ever_preg + f_has_florp, design, statistic="Chisq") # Chi² test  
+svychisq(~f_ever_preg + f_has_ehm, design, statistic="Chisq") # Chi² test  
 
 # Pregnancy and Wealth
 svychisq(~f_ever_preg + f_wealth, design, statistic="Chisq") # Chi² test
@@ -152,7 +152,7 @@ svychisq(~f_ever_preg + f_secondary, design, statistic="Chisq") # Chi² test
 # First, gather data to long format, but multiply the values by weights
 gen_dat <- dat %>%
   gather(key = "gender", value = "people", 
-         n_florp_man, n_florp_wom, n_florp_trans) %>%
+         n_ehm_man, n_ehm_wom, n_ehm_trans) %>%
   mutate(weighted_people = people * w_weight)
 
 # Then, summarize by gender
@@ -173,9 +173,9 @@ gender_counts
 # Replace the gender labels
 gender_counts <- gender_counts %>%
   mutate(Characteristic = recode(Characteristic,
-                                 "n_florp_man" = "Man",
-                                 "n_florp_trans" = "Transgender",
-                                 "n_florp_wom" = "Woman"))
+                                 "n_ehm_man" = "Man",
+                                 "n_ehm_trans" = "Transgender",
+                                 "n_ehm_wom" = "Woman"))
 gender_counts
 # Destination country of the migrants
 # First, gather data to long format, but multiply the values by weights

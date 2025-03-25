@@ -416,35 +416,35 @@ weighted_table &lt;- function(x) {
 compute_percentages &lt;- function(var) {
      tab &lt;- weighted_table(var)  # Get weighted table
      totals &lt;- rowSums(tab)  # Compute totals per category
-     has_florp &lt;- tab[, &quot;At least one&quot;]  # Extract HAS FLORP column
+     has_ehm &lt;- tab[, &quot;At least one&quot;]  # Extract HAS ehm column
      percentages &lt;- (totals / total_sample) * 100  # Compute percentages
-     has_florp_percentage &lt;- (has_florp / totals) * 100  # Compute % (HAS FLORP)
+     has_ehm_percentage &lt;- (has_ehm / totals) * 100  # Compute % (HAS ehm)
   
 # Convert to data frame for display
 results &lt;- data.frame(
       Category = rownames(tab), 
       Total = round(totals), # Round total counts
-      Has_Florp = round(has_florp), # Round HAS FLORP counts
+      Has_ehm = round(has_ehm), # Round HAS ehm counts
       Percentage = percentages,
-      Has_Florp_Percentage = has_florp_percentage)
+      Has_ehm_Percentage = has_ehm_percentage)
       return(results)
 }
 
 # Compute total sample size
-total_sample &lt;- sum(weighted_table(~n_age+f_has_florp)) 
+total_sample &lt;- sum(weighted_table(~n_age+f_has_ehm)) 
 
 # Compute percentages for all variables
-age_results &lt;- compute_percentages(~n_age+f_has_florp)
-region_results &lt;- compute_percentages(~f_region+f_has_florp)
-urban_results &lt;- compute_percentages(~f_urban+f_has_florp)
-ever_preg_results &lt;- compute_percentages(~f_ever_preg+f_has_florp)
-wealth_results &lt;- compute_percentages(~f_wealth+f_has_florp)
-secondary_results &lt;- compute_percentages(~f_secondary+f_has_florp)
+age_results &lt;- compute_percentages(~n_age+f_has_ehm)
+region_results &lt;- compute_percentages(~f_region+f_has_ehm)
+urban_results &lt;- compute_percentages(~f_urban+f_has_ehm)
+ever_preg_results &lt;- compute_percentages(~f_ever_preg+f_has_ehm)
+wealth_results &lt;- compute_percentages(~f_wealth+f_has_ehm)
+secondary_results &lt;- compute_percentages(~f_secondary+f_has_ehm)
 
 
 # Print results
 print(age_results)</code></pre>
-<pre><code>##    Category Total Has_Florp Percentage Has_Florp_Percentage
+<pre><code>##    Category Total Has_ehm Percentage Has_ehm_Percentage
 ## 13       13  1118        31   13.11388             2.799418
 ## 14       14  1300        35   15.25119             2.690516
 ## 15       15  1246        38   14.61352             3.037602
@@ -453,14 +453,14 @@ print(age_results)</code></pre>
 ## 18       18  1266        40   14.84408             3.154998
 ## 19       19  1112        31   13.04413             2.766509</code></pre>
 <pre class="r"><code>print(region_results)</code></pre>
-<pre><code>##                              Category Total Has_Florp Percentage
+<pre><code>##                              Category Total Has_ehm Percentage
 ## Atlantica                   Atlantica  1995        75  23.403038
 ## Oriental                     Oriental  1494        33  17.523250
 ##  Central                      Central  2058        54  24.135731
 ## Pacifica                     Pacifica  1461        66  17.136200
 ## Bogota                         Bogota  1257        17  14.743575
 ## Orinoquia/Amazonia Orinoquia/Amazonia   261         5   3.058207
-##                    Has_Florp_Percentage
+##                    Has_ehm_Percentage
 ## Atlantica                      3.748538
 ## Oriental                       2.242053
 ##  Central                       2.625431
@@ -468,44 +468,44 @@ print(age_results)</code></pre>
 ## Bogota                         1.332374
 ## Orinoquia/Amazonia             1.823520</code></pre>
 <pre class="r"><code>print(urban_results)</code></pre>
-<pre><code>##       Category Total Has_Florp Percentage Has_Florp_Percentage
+<pre><code>##       Category Total Has_ehm Percentage Has_ehm_Percentage
 ## Urban    Urban  6465       199   75.83064             3.080183
 ## Rural    Rural  2061        51   24.16936             2.481103</code></pre>
 <pre class="r"><code>print(ever_preg_results)</code></pre>
-<pre><code>##                    Category Total Has_Florp Percentage Has_Florp_Percentage
+<pre><code>##                    Category Total Has_ehm Percentage Has_ehm_Percentage
 ## Never                 Never  7352       218   86.23612             2.962068
 ## At least once At least once  1173        32   13.76388             2.768238</code></pre>
 <pre class="r"><code>print(wealth_results)</code></pre>
-<pre><code>##         Category Total Has_Florp Percentage Has_Florp_Percentage
+<pre><code>##         Category Total Has_ehm Percentage Has_ehm_Percentage
 ## Poorest  Poorest  1795        45   21.05704             2.519337
 ## Poorer    Poorer  1931        41   22.64687             2.142349
 ## Middle    Middle  1764        48   20.68814             2.732258
 ## Richer    Richer  1559        49   18.28744             3.155502
 ## Richest  Richest  1477        66   17.32051             4.488337</code></pre>
 <pre class="r"><code>print(secondary_results)</code></pre>
-<pre><code>##              Category Total Has_Florp Percentage Has_Florp_Percentage
+<pre><code>##              Category Total Has_ehm Percentage Has_ehm_Percentage
 ## No                 No   912        26   10.69619             2.893009
 ## Attempting Attempting  5299       161   62.15293             3.034937
 ## Complete     Complete  2315        63   27.15088             2.724205</code></pre>
-<pre class="r"><code># Get the weighted frequency of f_has_florp
-florp_table &lt;- weighted_table(~f_has_florp)
+<pre class="r"><code># Get the weighted frequency of f_has_ehm
+ehm_table &lt;- weighted_table(~f_has_ehm)
 
 # Calculate total N
-total_n &lt;- sum(florp_table)
+total_n &lt;- sum(ehm_table)
 
-# Extract N that have florp
-n_with_florp &lt;- florp_table[&quot;At least one&quot;]
+# Extract N that have ehm
+n_with_ehm &lt;- ehm_table[&quot;At least one&quot;]
 
 # Compute the percentage
-pct_with_florp &lt;- (n_with_florp / total_n) * 100
+pct_with_ehm &lt;- (n_with_ehm / total_n) * 100
 
 # Display
 cat(&quot;Total N:&quot;, total_n, &quot;\n&quot;)</code></pre>
 <pre><code>## Total N: 8525.75</code></pre>
-<pre class="r"><code>cat(&quot;N with florp:&quot;, n_with_florp, &quot;\n&quot;)</code></pre>
-<pre><code>## N with florp: 250.264</code></pre>
-<pre class="r"><code>cat(&quot;Percent with florp:&quot;, pct_with_florp, &quot;\n&quot;)</code></pre>
-<pre><code>## Percent with florp: 2.935389</code></pre>
+<pre class="r"><code>cat(&quot;N with ehm:&quot;, n_with_ehm, &quot;\n&quot;)</code></pre>
+<pre><code>## N with ehm: 250.264</code></pre>
+<pre class="r"><code>cat(&quot;Percent with ehm:&quot;, pct_with_ehm, &quot;\n&quot;)</code></pre>
+<pre><code>## Percent with ehm: 2.935389</code></pre>
 <pre class="r"><code># Verify the sample size
 total_teens &lt;- sum(weights(design, na.rm = TRUE))
 cat(&quot;Number of teens:&quot;, total_teens, &quot;\n&quot;)</code></pre>
@@ -523,22 +523,22 @@ preg_teens</code></pre>
 <pre class="r"><code># Relationship between teen pregnancy and having an EHM wealth and schooling----
 
 # percentage of households that have at least one EHM
-house_has_florp &lt;- svytotal(~ f_has_florp, design, na.rm = TRUE)
-percent_has_florp &lt;- (house_has_florp / total_teens) * 100
+house_has_ehm &lt;- svytotal(~ f_has_ehm, design, na.rm = TRUE)
+percent_has_ehm &lt;- (house_has_ehm / total_teens) * 100
 
 # Print the results
-cat(&quot;Percentage of teens with at least one EHM:&quot;, percent_has_florp, &quot;%\n&quot;)</code></pre>
+cat(&quot;Percentage of teens with at least one EHM:&quot;, percent_has_ehm, &quot;%\n&quot;)</code></pre>
 <pre><code>## Percentage of teens with at least one EHM: 97.06461 2.935389 %</code></pre>
 <pre class="r"><code># frequencies for teens that have an EHM
-svytable(~f_has_florp, design = design)</code></pre>
-<pre><code>## f_has_florp
+svytable(~f_has_ehm, design = design)</code></pre>
+<pre><code>## f_has_ehm
 ##         None At least one 
 ##     8275.486      250.264</code></pre>
 <pre class="r"><code># Print the results
-cat(&quot;Percentage of teens with at least one EHM:&quot;, percent_has_florp, &quot;%\n&quot;)</code></pre>
+cat(&quot;Percentage of teens with at least one EHM:&quot;, percent_has_ehm, &quot;%\n&quot;)</code></pre>
 <pre><code>## Percentage of teens with at least one EHM: 97.06461 2.935389 %</code></pre>
 <pre class="r"><code># Pregnancy across having an EHM
-preg_ehm&lt;- svytable(~  f_has_florp+ f_ever_preg, design= design) #cross table
+preg_ehm&lt;- svytable(~  f_has_ehm+ f_ever_preg, design= design) #cross table
 preg_ehm_df &lt;- as.data.frame.matrix(preg_ehm) #make dataframe
 preg_ehm_df$Prevalence &lt;- (preg_ehm_df$`At least once` / 
                              rowSums(preg_ehm_df)) * 100 #prevalence
@@ -573,11 +573,11 @@ preg_school_prog_df</code></pre>
 <pre class="r"><code># Chi sq tests
 
 # Pregnancy and having an EHM
-svychisq(~f_ever_preg + f_has_florp, design, statistic=&quot;Chisq&quot;) # Chi² test  </code></pre>
+svychisq(~f_ever_preg + f_has_ehm, design, statistic=&quot;Chisq&quot;) # Chi² test  </code></pre>
 <pre><code>## 
 ##  Pearson&#39;s X^2: Rao &amp; Scott adjustment
 ## 
-## data:  svychisq(~f_ever_preg + f_has_florp, design, statistic = &quot;Chisq&quot;)
+## data:  svychisq(~f_ever_preg + f_has_ehm, design, statistic = &quot;Chisq&quot;)
 ## X-squared = 0.14623, df = 1, p-value = 0.8805</code></pre>
 <pre class="r"><code># Pregnancy and Wealth
 svychisq(~f_ever_preg + f_wealth, design, statistic=&quot;Chisq&quot;) # Chi² test</code></pre>
@@ -599,7 +599,7 @@ svychisq(~f_ever_preg + f_secondary, design, statistic=&quot;Chisq&quot;) # Chi�
 # First, gather data to long format, but multiply the values by weights
 gen_dat &lt;- dat %&gt;%
   gather(key = &quot;gender&quot;, value = &quot;people&quot;, 
-         n_florp_man, n_florp_wom, n_florp_trans) %&gt;%
+         n_ehm_man, n_ehm_wom, n_ehm_trans) %&gt;%
   mutate(weighted_people = people * w_weight)
 
 # Then, summarize by gender
@@ -610,9 +610,9 @@ gender_counts</code></pre>
 <pre><code>## # A tibble: 3 × 2
 ##   gender        w_count
 ##   &lt;chr&gt;           &lt;dbl&gt;
-## 1 n_florp_man      138.
-## 2 n_florp_trans      0 
-## 3 n_florp_wom      184.</code></pre>
+## 1 n_ehm_man      138.
+## 2 n_ehm_trans      0 
+## 3 n_ehm_wom      184.</code></pre>
 <pre class="r"><code>total_gender &lt;- sum(gender_counts$w_count)
 
 # Print the total count of people
@@ -625,15 +625,15 @@ gender_counts</code></pre>
 <pre><code>## # A tibble: 3 × 3
 ##   Characteristic Count Percentage
 ##   &lt;chr&gt;          &lt;dbl&gt;      &lt;dbl&gt;
-## 1 n_florp_man     138.       43.0
-## 2 n_florp_trans     0         0  
-## 3 n_florp_wom     184.       57.0</code></pre>
+## 1 n_ehm_man     138.       43.0
+## 2 n_ehm_trans     0         0  
+## 3 n_ehm_wom     184.       57.0</code></pre>
 <pre class="r"><code># Replace the gender labels
 gender_counts &lt;- gender_counts %&gt;%
   mutate(Characteristic = recode(Characteristic,
-                                 &quot;n_florp_man&quot; = &quot;Man&quot;,
-                                 &quot;n_florp_trans&quot; = &quot;Transgender&quot;,
-                                 &quot;n_florp_wom&quot; = &quot;Woman&quot;))
+                                 &quot;n_ehm_man&quot; = &quot;Man&quot;,
+                                 &quot;n_ehm_trans&quot; = &quot;Transgender&quot;,
+                                 &quot;n_ehm_wom&quot; = &quot;Woman&quot;))
 gender_counts</code></pre>
 <pre><code>## # A tibble: 3 × 3
 ##   Characteristic Count Percentage
