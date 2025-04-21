@@ -1,6 +1,6 @@
-This repository contains the code I wrote to analyze the 2008 DHS dataset. The focus of my analysis was to determine whether having an emigrant household member influences teenage pregnancy. The R scripts include a data preparation file that lists all the libraries I use and outlines my method for reducing the dataset to only the necessary columns. 
+This repository contains the code I wrote to analyze the 2008 DHS dataset. The focus of my analysis was to determine whether having an emigrant household member influences teenage pregnancy. The R scripts include a preamble that lists all the libraries I use and describes my method for reducing the dataset to only the necessary columns. The data preparation file narrows the dataset, making it more manageable by retaining only the essential columns.
 
-The analysis includes basic statistics, such as the percentage of teenagers who have ever been pregnant. The logistic regression script contains all the relevant logistic regressions. I applied sampling weights as specified by the DHS program, which provides comprehensive documentation for their data https://www.dhsprogram.com/data/.
+The analysis includes basic statistics, such as the percentage of teenagers who have ever been pregnant. The logistic regression script contains all the relevant logistic regressions. I applied sampling weights as specified by the DHS program, which provides comprehensive documentation for their data: https://www.dhsprogram.com/data/.
 
 Please note that the data for this project is not included in the repository, as it must be requested directly from the DHS survey. It is typically possible to obtain a dataset for legitimate research purposes, and they also offer some test datasets.
 
