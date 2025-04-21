@@ -3,7 +3,7 @@
 # for analyzing DHS Colombia survey data
 
 # Load libraries
-library(dplyr)      # Data manipulation 
+library(dplyr)      # Data manipulation
 library(haven)      # Read .dta files
 library(here)       # Consistent file paths across computers
 library(tidyverse)  # Comprehensive data science toolkit
@@ -12,14 +12,14 @@ library(knitr)      # Generate markdown tables
 
 # Project Directory Setup ------------------------------------------------------
 # Centralized path management for consistent file referencing
-pth.root       <- here()                                       # Project root directory
-pth.dat_dir    <- file.path(pth.root, "data")                  # Data directory
-pth.raw_dir    <- file.path(pth.dat_dir, "raw")                # Raw DHS data directory
+pth.root     <- here()                        # Project root directory
+pth.dat_dir  <- file.path(pth.root, "data")   # Data directory
+pth.raw_dir  <- file.path(pth.dat_dir, "raw") # Raw DHS data directory
 
 # Survey-specific data paths
-pth.ir_dat     <- file.path(pth.raw_dir, "IR", "COIR72FL.DTA") # Individual responses
-pth.pr_dat     <- file.path(pth.raw_dir, "PR", "COPR72FL.DTA") # Household roster
-pth.hr_dat     <- file.path(pth.raw_dir, "HR", "COHR72FL.DTA") # Household data
+pth.ir_dat   <- file.path(pth.raw_dir, "IR", "COIR72FL.DTA") # Individual responses
+pth.pr_dat   <- file.path(pth.raw_dir, "PR", "COPR72FL.DTA") # Household roster
+pth.hr_dat   <- file.path(pth.raw_dir, "HR", "COHR72FL.DTA") # Household data
 
 # Column specification paths
 pth.ir_col     <- file.path(pth.raw_dir, "ir_columns.md") # IR column selections
@@ -47,7 +47,7 @@ load_cols <- function(f, c) {
     stringsAsFactors = FALSE,
     strip.white = TRUE
   )[c("raw_name", "new_name", "description")]
-  
+
   # Read specified columns from Stata file
   dat <- read_dta(f)[cols$raw_name]
   colnames(dat) <- cols$new_name
@@ -55,14 +55,14 @@ load_cols <- function(f, c) {
 }
 
 # Load preprocessed sample and convert columns to factors
-load_sample <- function () {
+load_sample <- function() {
   # Load preprocessed data
   dat <- read_dta(pth.sample_dat)
   # Convert columns to factors with meaningful labels
-  
+
   # Emigrant Household Member (EHM) status
   dat$f_has_ehm <- factor(dat$p_has_ehm, labels = c("None", "At least one"))
-  
+
   # Pregnancy status
   dat$f_ever_preg <- factor(dat$p_ever_preg, labels = c("Never", "At least once"))
   
@@ -133,12 +133,6 @@ is_member <- function(big, small, cols) {
   foo <- left_join(big, tmp, by = cols)
   !is.na(foo$it)
 }
-# is_member <- function(big, small, cols) {
-#   tmp <- small[,cols]
-#   tmp$it <- TRUE
-#   foo <- left_join(big, tmp, by=cols)
-#   !is.na(foo$it)
-# } #keeping original just in case
 
 # Extract the unique values out of a column
 get_uniq <- function(c) {
